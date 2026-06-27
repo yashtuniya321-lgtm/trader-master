@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TradePro AI Journal</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div class="app-shell">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">TP</div>
+        <div>
+          <h1>TradePro</h1>
+          <span>AI Journal</span>
+        </div>
+      </div>
+
+      <nav class="nav-menu" aria-label="Main navigation">
+        <button class="nav-item active" data-section="dashboardSection"><span>Dashboard</span></button>
+        <button class="nav-item" data-section="journalSection"><span>Journal</span></button>
+        <button class="nav-item" data-section="analyticsSection"><span>Analytics</span></button>
+        <button class="nav-item" data-section="portfolioSection"><span>Portfolio</span></button>
+        <button class="nav-item" data-section="calendarSection"><span>Calendar</span></button>
+        <button class="nav-item" data-section="psychologySection"><span>Psychology</span></button>
+        <button class="nav-item" data-section="reportsSection"><span>Reports</span></button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <span>Local data</span>
+        <strong id="storageStatus">Saved</strong>
+      </div>
+    </aside>
+
+    <!-- MAIN VIEWPORT -->
+    <main class="main-content">
+      <!-- DASHBOARD SECTION -->
+      <section id="dashboardSection" class="page-section active">
+        <header class="page-header">
+          <div>
+            <p class="eyebrow">Command center</p>
+            <h2>Trading Dashboard</h2>
+            <p class="muted">Track performance, review behavior, and let the AI coach surface your next improvement.</p>
+          </div>
+          <div class="header-actions">
+            <button class="btn primary" id="addEquityBtn">Add Equity</button>
+            <button class="btn accent" id="addOptionBtn">Add Option</button>
+          </div>
+        </header>
+
+        <div class="metric-grid">
+          <article class="metric-card">
+            <span>Total P&L</span>
+            <strong id="totalPL">Rs 0</strong>
+            <small id="totalPLNote">Closed trades only</small>
+          </article>
+          <article class="metric-card">
+            <span>Today P&L</span>
+            <strong id="todayPL">Rs 0</strong>
+            <small>Based on exit date</small>
+          </article>
+          <article class="metric-card">
+            <span>Win Rate</span>
+            <strong id="winRate">0%</strong>
+            <small id="winRateNote">0 closed trades</small>
+          </article>
+          <article class="metric-card">
+            <span>Profit Factor</span>
+            <strong id="profitFactor">0.00</strong>
+            <small>Gross profit / gross loss</small>
+          </article>
+          <article class="metric-card">
+            <span>Average RR</span>
+            <strong id="avgRR">0.00</strong>
+            <small>From analyzed trades</small>
+          </article>
+          <article class="metric-card">
+            <span>AI Score</span>
+            <strong id="aiScore">100</strong>
+            <small id="aiScoreNote">Discipline weighted</small>
+          </article>
+        </div>
+
+        <div class="dashboard-grid">
+          <article class="panel chart-panel">
+            <div class="panel-title">
+              <h3>Equity Curve</h3>
+              <span id="equityChartLabel">No trades yet</span>
+            </div>
+            <canvas id="equityChart" height="280"></canvas>
+          </article>
+
+          <article class="panel chart-panel">
+            <div class="panel-title">
+              <h3>Win/Loss Mix</h3>
+              <span id="mixChartLabel">Waiting for data</span>
+            </div>
+            <canvas id="mixChart" height="280"></canvas>
+          </article>
+        </div>
+
+        <article class="panel ai-panel">
+          <div class="panel-title">
+            <div>
+              <h3>AI Coach</h3>
+              <p class="muted">Instant trade-quality review generated from your journal data.</p>
+            </div>
+            <button class="btn primary" id="runCoachBtn">Run Analysis</button>
+          </div>
+          <div id="aiOutput" class="ai-output">
+            Add a few closed trades, then run the AI coach for performance, risk, and psychology insights.
+          </div>
+        </article>
+
+        <div class="table-grid">
+          <article class="panel">
+            <div class="panel-title">
+              <h3>Equity Trades</h3>
+              <button class="btn ghost" id="exportCsvBtn">Export CSV</button>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Symbol</th>
+                    <th>Qty</th>
+                    <th>Buy</th>
+                    <th>Sell</th>
+                    <th>Status</th>
+                    <th>P&L</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="equityTradeTable"></tbody>
+              </table>
+            </div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-title">
+              <h3>Option Trades</h3>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Symbol</th>
+                    <th>Expiry</th>
+                    <th>Strike</th>
+                    <th>Type</th>
+                    <th>Qty</th>
+                    <th>Status</th>
+                    <th>P&L</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="optionTradeTable"></tbody>
+              </table>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- JOURNAL SECTION -->
+      <section id="journalSection" class="page-section">
+        <header class="page-header compact">
+          <div>
+            <p class="eyebrow">Trade log</p>
+            <h2>Journal</h2>
+          </div>
+          <div class="segmented" id="journalFilters">
+            <button class="active" data-filter="all">All</button>
+            <button data-filter="equity">Equity</button>
+            <button data-filter="option">Options</button>
+            <button data-filter="open">Open</button>
+            <button data-filter="closed">Closed</button>
+            <button data-filter="profit">Winners</button>
+            <button data-filter="loss">Losers</button>
+          </div>
+        </header>
+        <article class="panel">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Type</th>
+                  <th>Symbol</th>
+                  <th>Setup</th>
+                  <th>Emotion</th>
+                  <th>Status</th>
+                  <th>P&L</th>
+                  <th>Quality</th>
+                </tr>
+              </thead>
+              <tbody id="journalTable"></tbody>
+            </table>
+          </div>
+        </article>
+      </section>
+
+      <!-- ANALYTICS SECTION -->
+      <section id="analyticsSection" class="page-section">
+        <header class="page-header compact">
+          <div>
+            <p class="eyebrow">Numbers</p>
+            <h2>Analytics</h2>
+          </div>
+        </header>
+        <div class="metric-grid">
+          <article class="metric-card"><span>Total Trades</span><strong id="analyticsTotalTrades">0</strong><small>All trades</small></article>
+          <article class="metric-card"><span>Closed Trades</span><strong id="analyticsClosedTrades">0</strong><small>Settled only</small></article>
+          <article class="metric-card"><span>Average Winner</span><strong id="avgWinner">Rs 0</strong><small>Closed wins</small></article>
+          <article class="metric-card"><span>Average Loser</span><strong id="avgLoser">Rs 0</strong><small>Closed losses</small></article>
+          <article class="metric-card"><span>Largest Win</span><strong id="largestWin">Rs 0</strong><small id="largestWinSymbol">-</small></article>
+          <article class="metric-card"><span>Largest Loss</span><strong id="largestLoss">Rs 0</strong><small id="largestLossSymbol">-</small></article>
+        </div>
+        
+        <article class="panel">
+          <div class="panel-title">
+            <h3>AI Pattern Finder</h3>
+          </div>
+          <div id="patternInsights" class="insight-grid">
+            <div class="insight-card">
+              <strong>Loading patterns...</strong>
+              <span>Fetching advanced correlations and system biases from your trading behavior...</span>
+            </div>
+          </div>
+        </article>
+      
+        <article class="panel">
+          <div class="panel-title">
+            <h3>Trade Screenshot Analysis</h3>
+          </div>
+          <div class="ss-upload-box">
+            <input type="file" id="analyticsScreenshots" multiple accept="image/*">
+            <p>Upload screenshots of setups, chart patterns, and technical indicators for study.</p>
+            <div id="analyticsScreenshotPreview" class="screenshot-preview"></div>
+          </div>
+        </article>
+      </section>
+
+      <!-- PORTFOLIO SECTION -->
+      <section id="portfolioSection" class="page-section">
+        <header class="page-header compact">
+          <div>
+            <p class="eyebrow">Exposure</p>
+            <h2>Portfolio</h2>
+          </div>
+        </header>
+        <div class="metric-grid">
+          <article class="metric-card"><span>Capital Deployed</span><strong id="capitalDeployed">Rs 0</strong><small>Entry value</small></article>
+          <article class="metric-card"><span>Realized P&L</span><strong id="realizedPL">Rs 0</strong><small>Closed positions</small></article>
+          <article class="metric-card"><span>Open Positions</span><strong id="openPositions">0</strong><small>Needs monitoring</small></article>
+          <article class="metric-card"><span>Option Exposure</span><strong id="optionExposure">Rs 0</strong><small>Premium paid</small></article>
+        </div>
+        <article class="panel">
+          <div class="panel-title">
+            <h3>Open Risk Monitor</h3>
+          </div>
+          <div id="riskMonitor" class="insight-grid"></div>
+        </article>
+      </section>
+
+      <!-- CALENDAR SECTION -->
+      <section id="calendarSection" class="page-section">
+        <header class="page-header compact">
+          <div>
+            <p class="eyebrow">Daily review</p>
+            <h2>Calendar</h2>
+          </div>
+          <input class="date-input" type="date" id="calendarDate">
+        </header>
+        <div class="metric-grid narrow">
+          <article class="metric-card"><span>Selected Day P&L</span><strong id="dailyPLDisplay">Rs 0</strong><small id="dailyTradeCount">0 trades</small></article>
+        </div>
+        <article class="panel">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Symbol</th>
+                  <th>Type</th>
+                  <th>Status</th>
+                  <th>P&L</th>
+                  <th>Note</th>
+                </tr>
+              </thead>
+              <tbody id="calendarTradesTable"></tbody>
+            </table>
+          </div>
+        </article>
+      </section>
+
+      <!-- PSYCHOLOGY SECTION -->
+      <section id="psychologySection" class="page-section">
+        <header class="page-header compact">
+          <div>
+            <p class="eyebrow">Behavior</p>
+            <h2>Psychology</h2>
+          </div>
+        </header>
+        <div class="metric-grid">
+          <article class="metric-card"><span>Fear</span><strong id="fearCount">0</strong><small>Tagged trades</small></article>
+          <article class="metric-card"><span>Greed</span><strong id="greedCount">0</strong><small>Tagged trades</small></article>
+          <article class="metric-card"><span>FOMO</span><strong id="fomoCount">0</strong><small>Tagged trades</small></article>
+          <article class="metric-card"><span>Discipline</span><strong id="disciplineScore">100%</strong><small>Behavior score</small></article>
+        </div>
+        <article class="panel">
+          <div class="panel-title">
+            <h3>Psychology Report</h3>
+          </div>
+          <div id="psychologyReport" class="ai-output"></div>
+        </article>
+      </section>
+
+      <!-- REPORTS SECTION -->
+      <section id="reportsSection" class="page-section">
+        <header class="page-header compact">
+          <div>
+            <p class="eyebrow">Export</p>
+            <h2>Reports</h2>
+          </div>
+          <div class="header-actions">
+            <button class="btn secondary" id="importJsonBtn">Import JSON</button>
+            <button class="btn primary" id="exportJsonBtn">Export JSON</button>
+            <input type="file" id="importFile" accept="application/json" hidden>
+          </div>
+        </header>
+        <article class="panel">
+          <div class="panel-title">
+            <h3>Professional Summary</h3>
+            <button class="btn accent" id="generateReportBtn">Generate Report</button>
+          </div>
+          <div id="reportOutput" class="report-output">Generate a report after entering trades.</div>
+        </article>
+      </section>
+    </main>
+  </div>
+
+  <!-- EQUITY TRADE MODAL -->
+  <div id="tradeModal" class="modal" aria-hidden="true">
+    <div class="modal-card">
+      <button class="modal-close" data-close="tradeModal" aria-label="Close">x</button>
+      <h2 id="tradeModalTitle">Add Equity Trade</h2>
+      <form id="tradeForm" class="form-grid">
+        <input type="hidden" id="tradeId">
+        <label>Symbol <input type="text" id="symbol" placeholder="RELIANCE" required></label>
+        <label>Quantity <input type="number" id="quantity" min="1" step="1" required></label>
+        <label>Buy Price <input type="number" id="buyPrice" min="0" step="0.01" required></label>
+        <label>Sell Price <input type="number" id="sellPrice" min="0" step="0.01" placeholder="Leave empty if open"></label>
+        <label>Buy Date <input type="date" id="buyDate" required></label>
+        <label>Sell Date <input type="date" id="sellDate"></label>
+        <label>Entry Time <input type="time" id="entryTime"></label>
+        <label>Exit Time <input type="time" id="exitTime"></label>
+        <label class="full">Notes <textarea id="tradeNotes" placeholder="Why did you take this trade?"></textarea></label>
+        <button class="btn primary full" type="submit">Save Equity Trade</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- OPTION TRADE MODAL -->
+  <div id="optionModal" class="modal" aria-hidden="true">
+    <div class="modal-card">
+      <button class="modal-close" data-close="optionModal" aria-label="Close">x</button>
+      <h2 id="optionModalTitle">Add Option Trade</h2>
+      <form id="optionForm" class="form-grid">
+        <input type="hidden" id="optionId">
+        <label>Symbol <input type="text" id="optionSymbol" placeholder="NIFTY" required></label>
+        <label>Expiry <input type="date" id="expiry" required></label>
+        <label>Strike <input type="number" id="strike" min="0" step="1" required></label>
+        <label>Type
+          <select id="cepe">
+            <option value="CE">CE</option>
+            <option value="PE">PE</option>
+          </select>
+        </label>
+        <label>Lots <input type="number" id="lots" min="1" step="1" required></label>
+        <label>Quantity <input type="number" id="optionQty" min="1" step="1" required></label>
+        <label>Buy Premium <input type="number" id="buyPremium" min="0" step="0.01" required></label>
+        <label>Sell Premium <input type="number" id="sellPremium" min="0" step="0.01" placeholder="Leave empty if open"></label>
+        <label>Buy Date <input type="date" id="optionBuyDate" required></label>
+        <label>Sell Date <input type="date" id="optionSellDate"></label>
+        <label class="full">Notes <textarea id="optionNotes" placeholder="Setup, risk, execution quality"></textarea></label>
+        <button class="btn primary full" type="submit">Save Option Trade</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ANALYSIS MODAL -->
+  <div id="analysisModal" class="modal" aria-hidden="true">
+    <div class="modal-card wide">
+      <button class="modal-close" data-close="analysisModal" aria-label="Close">x</button>
+      <h2>Trade Analysis</h2>
+      <form id="analysisForm" class="form-grid">
+        <input type="hidden" id="analysisTradeId">
+        <label>Strategy
+          <select id="strategy">
+            <option>Breakout</option>
+            <option>Pullback</option>
+            <option>Scalping</option>
+            <option>Swing</option>
+            <option>Reversal</option>
+            <option>News</option>
+          </select>
+        </label>
+        <label>Emotion
+          <select id="emotion">
+            <option>Calm</option>
+            <option>Confident</option>
+            <option>Fear</option>
+            <option>Greed</option>
+            <option>FOMO</option>
+            <option>Revenge</option>
+          </select>
+        </label>
+        <label>Market
+          <select id="marketCondition">
+            <option>Bullish</option>
+            <option>Bearish</option>
+            <option>Sideways</option>
+            <option>Volatile</option>
+          </select>
+        </label>
+        <label>Stop Loss <input type="number" id="stopLoss" min="0" step="0.01"></label>
+        <label>Target <input type="number" id="target" min="0" step="0.01"></label>
+        <label>Rating
+          <select id="tradeRating">
+            <option value="1">1 - Poor</option>
+            <option value="2">2 - Weak</option>
+            <option value="3">3 - Average</option>
+            <option value="4">4 - Good</option>
+            <option value="5">5 - Excellent</option>
+          </select>
+        </label>
+        <label class="full">Entry Reason <textarea id="entryReason"></textarea></label>
+        <label class="full">Exit Reason <textarea id="exitReason"></textarea></label>
+        <label class="full">Lesson Learned <textarea id="lessonLearned"></textarea></label>
+        
+        <fieldset class="full checkbox-grid">
+          <legend>Mistakes</legend>
+          <label><input type="checkbox" name="mistakeCheck" value="Late Entry"> Late Entry</label>
+          <label><input type="checkbox" name="mistakeCheck" value="Early Exit"> Early Exit</label>
+          <label><input type="checkbox" name="mistakeCheck" value="No Stop Loss"> No Stop Loss</label>
+          <label><input type="checkbox" name="mistakeCheck" value="FOMO"> FOMO</label>
+          <label><input type="checkbox" name="mistakeCheck" value="Over Trading"> Over Trading</label>
+          <label><input type="checkbox" name="mistakeCheck" value="Oversized Position"> Oversized Position</label>
+          <label class="full">Custom mistake
+            <input type="text" id="customMistake" placeholder="Describe a custom mistake">
+          </label>
+        </fieldset>
+
+        <label class="full">
+          Trade Screenshots
+          <input type="file" id="analysisScreenshots" multiple accept="image/*">
+          <small>Upload multiple screenshots for this trade analysis.</small>
+          <div id="screenshotPreview" class="screenshot-preview"></div>
+        </label>
+        <button class="btn primary full" type="submit">Save Analysis</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- LIGHTBOX SLIDESHOW SYSTEM -->
+  <div id="lightboxModal" class="lightbox-modal" aria-hidden="true">
+    <button class="lightbox-close" id="lightboxClose" aria-label="Close">✖</button>
+    <button class="lightbox-prev" id="lightboxPrev" aria-label="Previous">◀</button>
+    <div class="lightbox-container">
+      <img id="lightboxImg" src="" alt="Trade Screenshot">
+    </div>
+    <button class="lightbox-next" id="lightboxNext" aria-label="Next">▶</button>
+    <div id="lightboxCounter" class="lightbox-counter">1 / 1</div>
+  </div>
+
+  <div id="toast" class="toast" role="status"></div>
+  
+  <script src="/app.js"></script>
+</body>
+</html>
